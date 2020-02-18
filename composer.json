@@ -1,0 +1,24 @@
+{
+    "name": "fagforbundet/symfony-notification-api-mailer",
+    "description": "Symfony Notification API Mailer Bridge",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tom Roar Furunes",
+            "email": "tom.roar@halloverden.no"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^7.2.5",
+        "symfony/mailer": "^4.4|^5.0",
+        "symfony/http-client": "^4.4|^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fagforbundet\\NotificationApiMailer\\": ""
+        }
+    }
+}
