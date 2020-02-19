@@ -25,7 +25,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class NotificationApiTransport extends AbstractApiTransport {
-  const HOST = 'api.meldinger.fagforbundet.no';
+  const DEFAULT_HOST = 'api.meldinger.fagforbundet.no';
 
   /**
    * @var string|null
@@ -99,7 +99,7 @@ class NotificationApiTransport extends AbstractApiTransport {
    * @return string|null
    */
   private function getEndpoint(): ?string {
-    return ($this->host ?: self::HOST).($this->port ? ':'.$this->port : '');
+    return ($this->host ?: self::DEFAULT_HOST).($this->port ? ':'.$this->port : '');
   }
 
   /**
