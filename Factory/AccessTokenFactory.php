@@ -15,7 +15,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AccessTokenFactory implements AccessTokenFactoryInterface {
   const DEFAULT_SCOPE = 'notifications.send notifications.emails.send_raw';
-  const DEFAULT_TOKEN_ENDPOINT = 'https://api.id-test.fagforbundet.no/v1/oauth/token';
+  const DEFAULT_TOKEN_ENDPOINT = 'https://api.id.fagforbundet.no/v1/oauth/token';
 
   /**
    * @var string
