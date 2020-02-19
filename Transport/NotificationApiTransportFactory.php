@@ -50,8 +50,7 @@ class NotificationApiTransportFactory extends AbstractTransportFactory {
       ->setPort($dsn->getPort())
       ->setAccessTokenFactory($this->accessTokenFactory)
       ->setClientId($this->getClientId($dsn))
-      ->setClientSecret($this->getClientSecret($dsn))
-      ->setVerifyHost(filter_var($dsn->getOption('verifyHost', true), FILTER_VALIDATE_BOOLEAN));
+      ->setClientSecret($this->getClientSecret($dsn));
   }
 
   /**

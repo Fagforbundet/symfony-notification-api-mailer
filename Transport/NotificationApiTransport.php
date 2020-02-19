@@ -36,11 +36,6 @@ class NotificationApiTransport extends AbstractApiTransport {
   private $clientSecret;
 
   /**
-   * @var bool
-   */
-  private $verifyHost = true;
-
-  /**
    * @var AccessTokenFactoryInterface|null
    */
   private $accessTokenFactory = null;
@@ -76,16 +71,6 @@ class NotificationApiTransport extends AbstractApiTransport {
   }
 
   /**
-   * @param bool $verifyHost
-   *
-   * @return NotificationApiTransport
-   */
-  public function setVerifyHost(bool $verifyHost): self {
-    $this->verifyHost = $verifyHost;
-    return $this;
-  }
-
-  /**
    * @param SentMessage $sentMessage
    * @param Email       $email
    * @param Envelope    $envelope
@@ -97,7 +82,6 @@ class NotificationApiTransport extends AbstractApiTransport {
       $response = $this->client->request('POST', 'https://' . $this->getEndpoint() . '/v1/notifications', [
         'json' => $this->getPayload($email),
         'auth_bearer' => $this->getAccessToken(),
-        'verify_host' => $this->verifyHost
       ]);
 
       $content = $response->toArray();
