@@ -163,14 +163,14 @@ class NotificationApiTransport extends AbstractApiTransport {
     $sender = $email->getSender();
     if ($sender !== null) {
       if ($name = $sender->getName()) {
-        $sender['name'] = $name;
+        $senderPayload['name'] = $name;
       }
 
-      $sender['email'] = $sender->getAddress();
+      $senderPayload['email'] = $sender->getAddress();
     }
 
     if (count($replyTo = $email->getReplyTo())) {
-      $sender['replyTo'] = $replyTo[0];
+      $senderPayload['replyTo'] = $replyTo[0]->getAddress();
     }
 
     return $senderPayload;
