@@ -26,14 +26,14 @@ class NotificationApiTransport extends AbstractApiTransport {
   const DEFAULT_HOST = 'api.meldinger.fagforbundet.no';
 
   /**
-   * @var string|null
+   * @var string
    */
-  private $clientId = null;
+  private $clientId;
 
   /**
-   * @var string|null
+   * @var string
    */
-  private $clientSecret = null;
+  private $clientSecret;
 
   /**
    * @var bool
@@ -46,21 +46,21 @@ class NotificationApiTransport extends AbstractApiTransport {
   private $accessTokenFactory = null;
 
   /**
-   * @param string|null $clientId
+   * @param string $clientId
    *
    * @return NotificationApiTransport
    */
-  public function setClientId(?string $clientId): self {
+  public function setClientId(string $clientId): self {
     $this->clientId = $clientId;
     return $this;
   }
 
   /**
-   * @param string|null $clientSecret
+   * @param string $clientSecret
    *
    * @return NotificationApiTransport
    */
-  public function setClientSecret(?string $clientSecret): self {
+  public function setClientSecret(string $clientSecret): self {
     $this->clientSecret = $clientSecret;
     return $this;
   }

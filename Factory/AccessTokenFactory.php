@@ -48,7 +48,7 @@ class AccessTokenFactory implements AccessTokenFactoryInterface {
   /**
    * @inheritDoc
    */
-  public function create(?string $clientId = null, ?string $clientSecret = null): string {
+  public function create(string $clientId, string $clientSecret): string {
     try {
       $response = $this->client->request('POST', $this->tokenEndpoint, [
         'body' => [
