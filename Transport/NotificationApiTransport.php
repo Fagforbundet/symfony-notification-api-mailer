@@ -4,6 +4,7 @@
 namespace Fagforbundet\NotificationApiMailer\Transport;
 
 
+use Fagforbundet\NotificationApiMailer\Factory\AccessTokenFactory;
 use Fagforbundet\NotificationApiMailer\Interfaces\AccessTokenFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Envelope;
@@ -105,6 +106,10 @@ class NotificationApiTransport extends AbstractApiTransport {
    * @return string
    */
   private function getAccessToken(): string {
+    if ($this->accessTokenFactory === null) {
+      $this->accessTokenFactory = new AccessTokenFactory($this->client);
+    }
+
     return $this->accessTokenFactory->create($this->clientId, $this->clientSecret);
   }
 

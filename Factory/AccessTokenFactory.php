@@ -14,7 +14,8 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AccessTokenFactory implements AccessTokenFactoryInterface {
-  const SCOPE = 'notifications.send notifications.emails.send_raw';
+  const DEFAULT_SCOPE = 'notifications.send notifications.emails.send_raw';
+  const DEFAULT_TOKEN_ENDPOINT = 'https://api.id-test.fagforbundet.no/v1/oauth/token';
 
   /**
    * @var string
@@ -34,14 +35,14 @@ class AccessTokenFactory implements AccessTokenFactoryInterface {
   /**
    * AccessTokenFactory constructor.
    *
-   * @param string              $tokenEndpoint
    * @param HttpClientInterface $client
+   * @param string|null         $tokenEndpoint
    * @param string|null         $scope
    */
-  public function __construct(string $tokenEndpoint, HttpClientInterface $client = null, string $scope = null) {
-    $this->tokenEndpoint = $tokenEndpoint;
+  public function __construct(?HttpClientInterface $client = null, ?string $tokenEndpoint = null, ?string $scope = null) {
     $this->client = $client ?: HttpClient::create();
-    $this->scope = $scope ?: self::SCOPE;
+    $this->tokenEndpoint = $tokenEndpoint ?: self::DEFAULT_TOKEN_ENDPOINT;
+    $this->scope = $scope ?: self::DEFAULT_SCOPE;
   }
 
   /**
