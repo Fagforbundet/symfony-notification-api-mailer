@@ -6,7 +6,7 @@ namespace Fagforbundet\NotificationApiMailer\Transport;
 
 use Fagforbundet\NotificationApiMailer\Factory\AccessTokenFactory;
 use Fagforbundet\NotificationApiMailer\Interfaces\AccessTokenFactoryInterface;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\Exception\JsonException;
 use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\Exception\HttpTransportException;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -17,11 +17,9 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Header\ParameterizedHeader;
 use Symfony\Component\Mime\Part\DataPart;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class NotificationApiTransport extends AbstractApiTransport {
@@ -38,26 +36,53 @@ class NotificationApiTransport extends AbstractApiTransport {
   private $clientSecret = null;
 
   /**
-   * @var AccessTokenFactoryInterface
+   * @var bool
    */
-  private $accessTokenFactory;
+  private $verifyHost = true;
 
   /**
-   * NotificationApiTransport constructor.
-   *
-   * @param AccessTokenFactoryInterface   $accessTokenFactory
-   * @param string                        $clientId
-   * @param string                        $clientSecret
-   * @param HttpClientInterface|null      $client
-   * @param EventDispatcherInterface|null $dispatcher
-   * @param LoggerInterface|null          $logger
+   * @var AccessTokenFactoryInterface|null
    */
-  public function __construct(AccessTokenFactoryInterface $accessTokenFactory, ?string $clientId = null, ?string $clientSecret = null, HttpClientInterface $client = null, EventDispatcherInterface $dispatcher = null, LoggerInterface $logger = null) {
-    $this->accessTokenFactory = $accessTokenFactory;
-    $this->clientId = $clientId;
-    $this->clientSecret = $clientSecret;
+  private $accessTokenFactory = null;
 
-    parent::__construct($client, $dispatcher, $logger);
+  /**
+   * @param string|null $clientId
+   *
+   * @return NotificationApiTransport
+   */
+  public function setClientId(?string $clientId): self {
+    $this->clientId = $clientId;
+    return $this;
+  }
+
+  /**
+   * @param string|null $clientSecret
+   *
+   * @return NotificationApiTransport
+   */
+  public function setClientSecret(?string $clientSecret): self {
+    $this->clientSecret = $clientSecret;
+    return $this;
+  }
+
+  /**
+   * @param AccessTokenFactoryInterface|null $accessTokenFactory
+   *
+   * @return NotificationApiTransport
+   */
+  public function setAccessTokenFactory(?AccessTokenFactoryInterface $accessTokenFactory): self {
+    $this->accessTokenFactory = $accessTokenFactory;
+    return $this;
+  }
+
+  /**
+   * @param bool $verifyHost
+   *
+   * @return NotificationApiTransport
+   */
+  public function setVerifyHost(bool $verifyHost): self {
+    $this->verifyHost = $verifyHost;
+    return $this;
   }
 
   /**
@@ -71,14 +96,13 @@ class NotificationApiTransport extends AbstractApiTransport {
     try {
       $response = $this->client->request('POST', 'https://' . $this->getEndpoint() . '/v1/notifications', [
         'json' => $this->getPayload($email),
-        'auth_bearer' => $this->getAccessToken()
+        'auth_bearer' => $this->getAccessToken(),
+        'verify_host' => $this->verifyHost
       ]);
 
       $content = $response->toArray();
     } catch (HttpExceptionInterface $e) {
-      /** @noinspection PhpUnhandledExceptionInspection */
-      $error = $e->getResponse()->toArray(false)['error'] ?? 'unknown';
-      throw new HttpTransportException(sprintf('Unable to send email: %s', $error), $e->getResponse(), 0, $e);
+      throw new HttpTransportException(sprintf('Unable to send email: %s', $this->getError($e)), $e->getResponse(), 0, $e);
     } catch (TransportExceptionInterface | DecodingExceptionInterface $e) {
       throw new TransportException('Unable to send email', 0, $e);
     }
@@ -86,6 +110,21 @@ class NotificationApiTransport extends AbstractApiTransport {
     $this->getLogger()->debug('Mail sent to notification-api', ['response' => $content]);
 
     return $response;
+  }
+
+  /**
+   * @param HttpExceptionInterface $exception
+   *
+   * @return string
+   * @noinspection PhpDocMissingThrowsInspection
+   */
+  private function getError(HttpExceptionInterface $exception): string {
+    try {
+      /** @noinspection PhpUnhandledExceptionInspection */
+      return $exception->getResponse()->toArray(false)['error'] ?? $exception->getMessage();
+    } /** @noinspection PhpRedundantCatchClauseInspection */ catch (JsonException $e) {
+      return $exception->getMessage();
+    }
   }
 
   /**

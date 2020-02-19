@@ -4,35 +4,27 @@
 namespace Fagforbundet\NotificationApiMailer\Transport;
 
 
-use Fagforbundet\NotificationApiMailer\Factory\AccessTokenFactory;
 use Fagforbundet\NotificationApiMailer\Interfaces\AccessTokenFactoryInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Exception\UnsupportedSchemeException;
 use Symfony\Component\Mailer\Transport\AbstractTransportFactory;
 use Symfony\Component\Mailer\Transport\Dsn;
 use Symfony\Component\Mailer\Transport\TransportInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class NotificationApiTransportFactory extends AbstractTransportFactory {
-  const TOKEN_ENDPOINT = 'https://api.id.fagforbundet.no/v1/oauth/token';
 
   /**
-   * @var AccessTokenFactoryInterface
+   * @var AccessTokenFactoryInterface|null
    */
-  private $accessTokenFactory;
+  private $accessTokenFactory = null;
 
   /**
-   * NotificationApiTransportFactory constructor.
-   *
-   * @param EventDispatcherInterface|null    $dispatcher
-   * @param HttpClientInterface|null         $client
-   * @param LoggerInterface|null             $logger
    * @param AccessTokenFactoryInterface|null $accessTokenFactory
+   *
+   * @return NotificationApiTransportFactory
    */
-  public function __construct(EventDispatcherInterface $dispatcher = null, HttpClientInterface $client = null, LoggerInterface $logger = null, ?AccessTokenFactoryInterface $accessTokenFactory = null) {
-    parent::__construct($dispatcher, $client, $logger);
-    $this->accessTokenFactory = $accessTokenFactory ?: new AccessTokenFactory(self::TOKEN_ENDPOINT, $client);
+  public function setAccessTokenFactory(?AccessTokenFactoryInterface $accessTokenFactory): self {
+    $this->accessTokenFactory = $accessTokenFactory;
+    return $this;
   }
 
   /**
@@ -52,8 +44,12 @@ class NotificationApiTransportFactory extends AbstractTransportFactory {
       throw new UnsupportedSchemeException($dsn, 'notification-api', $this->getSupportedSchemes());
     }
 
-    return (new NotificationApiTransport($this->accessTokenFactory, $dsn->getUser(), $dsn->getPassword(), $this->client, $this->dispatcher, $this->logger))
+    return (new NotificationApiTransport($this->client, $this->dispatcher, $this->logger))
       ->setHost('default' === $dsn->getHost() ? null : $dsn->getHost())
-      ->setPort($dsn->getPort());
+      ->setPort($dsn->getPort())
+      ->setAccessTokenFactory($this->accessTokenFactory)
+      ->setClientId($dsn->getUser())
+      ->setClientSecret($dsn->getPassword())
+      ->setVerifyHost(filter_var($dsn->getOption('verifyHost', true), FILTER_VALIDATE_BOOLEAN));
   }
 }
