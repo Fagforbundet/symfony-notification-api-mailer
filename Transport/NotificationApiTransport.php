@@ -130,7 +130,7 @@ class NotificationApiTransport extends AbstractApiTransport {
       $requestData['attachments'] = $this->getAttachmentsPayload($attachments);
     }
 
-    return $requestData;
+    return ['email' => $requestData];
   }
 
   /**
