@@ -145,7 +145,8 @@ class NotificationApiTransport extends AbstractApiTransport {
     $requestData = [
       'content' => $this->getContentPayload($email),
       'subject' => $email->getSubject(),
-      'sender' => $this->getSenderPayload($email),
+      'from' => $this->getRecipientPayload($email->getFrom()),
+      'replyTo' => $this->getRecipientPayload($email->getReplyTo()),
       'recipients' => $this->getRecipientsPayload($email)
     ];
 
@@ -180,30 +181,6 @@ class NotificationApiTransport extends AbstractApiTransport {
    *
    * @return array
    */
-  private function getSenderPayload(Email $email): array {
-    $senderPayload = [];
-
-    $sender = $email->getSender();
-    if ($sender !== null) {
-      if ($name = $sender->getName()) {
-        $senderPayload['name'] = $name;
-      }
-
-      $senderPayload['email'] = $sender->getAddress();
-    }
-
-    if (count($replyTo = $email->getReplyTo())) {
-      $senderPayload['replyTo'] = $replyTo[0]->getAddress();
-    }
-
-    return $senderPayload;
-  }
-
-  /**
-   * @param Email $email
-   *
-   * @return array
-   */
   private function getRecipientsPayload(Email $email): array {
     $recipientsPayload = [];
 
@@ -231,18 +208,27 @@ class NotificationApiTransport extends AbstractApiTransport {
     $recipientPayload = [];
 
     foreach ($recipients as $recipient) {
-      $r = [
-        'email' => $recipient->getAddress()
-      ];
-
-      if ($name = $recipient->getName()) {
-        $r['name'] = $name;
-      }
-
-      $recipientPayload[] = $r;
+      $recipientPayload[] = $this->getRecipient($recipient);
     }
 
     return $recipientPayload;
+  }
+
+  /**
+   * @param Address $recipient
+   *
+   * @return array
+   */
+  private function getRecipient(Address $recipient): array {
+    $recipientArray = [
+      'email' => $recipient->getAddress()
+    ];
+
+    if ($name = $recipient->getName()) {
+      $recipientArray['name'] = $name;
+    }
+
+    return $recipientArray;
   }
 
   /**
