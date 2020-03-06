@@ -146,7 +146,7 @@ class NotificationApiTransport extends AbstractApiTransport {
     $requestData = [
       'content' => $this->getContentPayload($email),
       'subject' => $email->getSubject(),
-      'from' => $this->getRecipientPayload($email->getFrom()),
+      'from' => $this->getRecipientPayload(\in_array($envelope->getSender(), $email->getFrom(), true) ? $email->getFrom() : [$envelope->getSender()]),
       'replyTo' => $this->getRecipientPayload($email->getReplyTo()),
       'recipients' => $this->getRecipientsPayload($email, $envelope)
     ];
