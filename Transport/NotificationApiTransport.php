@@ -80,7 +80,7 @@ class NotificationApiTransport extends AbstractApiTransport {
   protected function doSendApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface {
     try {
       $response = $this->client->request('POST', 'https://' . $this->getEndpoint() . '/v1/notifications', [
-        'json' => $this->getPayload($email),
+        'json' => $this->getPayload($email, $envelope),
         'auth_bearer' => $this->getAccessToken(),
       ]);
 
@@ -137,17 +137,18 @@ class NotificationApiTransport extends AbstractApiTransport {
   }
 
   /**
-   * @param Email $email
+   * @param Email    $email
+   * @param Envelope $envelope
    *
    * @return array
    */
-  private function getPayload(Email $email): array {
+  private function getPayload(Email $email, Envelope $envelope): array {
     $requestData = [
       'content' => $this->getContentPayload($email),
       'subject' => $email->getSubject(),
-      'from' => $this->getRecipientPayload($email->getFrom()),
+      'from' => $this->getRecipientPayload(\in_array($envelope->getSender(), $email->getFrom(), true) ? $email->getFrom() : [$envelope->getSender()]),
       'replyTo' => $this->getRecipientPayload($email->getReplyTo()),
-      'recipients' => $this->getRecipientsPayload($email)
+      'recipients' => $this->getRecipientsPayload($email, $envelope)
     ];
 
     if ($attachments = $email->getAttachments()) {
@@ -177,23 +178,23 @@ class NotificationApiTransport extends AbstractApiTransport {
   }
 
   /**
-   * @param Email $email
+   * @param Email    $email
+   * @param Envelope $envelope
    *
    * @return array
    */
-  private function getRecipientsPayload(Email $email): array {
+  private function getRecipientsPayload(Email $email, Envelope $envelope): array {
     $recipientsPayload = [];
 
-    if (count($toRecipients = $email->getTo())) {
-      $recipientsPayload['to'] = $this->getRecipientPayload($toRecipients);
-    }
+    foreach ($envelope->getRecipients() as $recipient) {
+      $type = 'to';
+      if (\in_array($recipient, $email->getBcc(), true)) {
+        $type = 'bcc';
+      } elseif (\in_array($recipient, $email->getCc(), true)) {
+        $type = 'cc';
+      }
 
-    if (count($ccRecipients = $email->getCc())) {
-      $recipientsPayload['cc'] = $this->getRecipientPayload($ccRecipients);
-    }
-
-    if (count($bccRecipients = $email->getBcc())) {
-      $recipientsPayload['bcc'] = $this->getRecipientPayload($bccRecipients);
+      $recipientsPayload[$type][] = $this->getRecipient($recipient);
     }
 
     return $recipientsPayload;
